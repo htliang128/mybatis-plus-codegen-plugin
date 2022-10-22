@@ -1,6 +1,6 @@
 这是一个利用mariaDB和DDL文件来生成代码的maven插件
 
-支持联合主键生成（自动处理保留非分区键的日一个主键） 例如primary key (`account_id`,`id`)...partition by hash (`account_id`) -> primary key (`id`)
+支持联合主键生成（自动处理保留非分区键的第一个主键） 例如primary key (`account_id`,`id`)...partition by hash (`account_id`) -> primary key (`id`)
 
 使用教程后面有空补上，中心仓有空再发布，熟悉plugin使用的同学可以看下 codegenOptions, 几乎所有参数默认值与mybatis plus官网一致
 
