@@ -4,7 +4,7 @@
 
 使用教程后面有空补上，中心仓有空再发布，熟悉plugin使用的同学可以看下 codegenOptions, 几乎所有参数默认值与mybatis plus官网一致
 
-参考如下
+参考如下，需要定义其他参数请查阅codegenOptions.Java
 ``` xml
             <plugin>
                 <groupId>com.htliang.db</groupId>
