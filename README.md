@@ -18,7 +18,7 @@ Mybatis plus codegen plugin will help you generate your code at every moment wit
 ## 快速使用
 ``` xml
             <plugin>
-                <groupId>com.htliang.db</groupId>
+                <groupId>com.htliang</groupId>
                 <artifactId>mybatis-plus-codegen-plugin</artifactId>
                 <version>1.0.3</version>
                 <executions>
