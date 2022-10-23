@@ -21,7 +21,7 @@
     <groupId>com.htliang.db</groupId>
     <artifactId>mybatis-plus-codegen-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>1.0.0</version>
+    <version>1.0.2-SNAPSHOT</version>
 
     <name>Mybatis plus codegen plugin</name>
     <url>https://github.com/htliang128/mybatis-plus-codegen-plugin</url>
@@ -134,19 +134,6 @@
                         <id>attach-sources</id>
                         <goals>
                             <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>
