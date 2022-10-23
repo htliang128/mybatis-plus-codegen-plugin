@@ -6,8 +6,8 @@ Mybatis plus codegen plugin will help you generate your code at every moment wit
 
 ## 简介
 
-- 本项目解决mybatis plus codegen依赖于真实数据库环境问题，在codegen时启用临时mariaDB进行代码生成
-- 本项目解决mybatis plus codegen无法处理联合主键的问题，先通过JsqlParser去除联合主键和分区，联合查询可在代码生成后自己实现
+- 解决mybatis plus codegen依赖于真实数据库环境，变成依赖sql文件，在codegen时启用临时mariaDB进行代码生成
+- 解决mybatis plus codegen无法处理联合主键的问题，先通过JsqlParser去除联合主键和分区，联合查询可在代码生成后自己实现
 - 配置参数与Mybatis plus codegen官网保持一致，默认值也一致。可直接参考 https://baomidou.com/pages/981406/#%E5%8F%AF%E9%80%89%E9%85%8D%E7%BD%AE
 
 ## 使用场景
