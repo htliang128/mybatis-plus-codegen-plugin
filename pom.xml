@@ -18,10 +18,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.htliang.db</groupId>
+    <groupId>com.htliang</groupId>
     <artifactId>mybatis-plus-codegen-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
 
     <name>Mybatis plus codegen plugin</name>
     <url>https://github.com/htliang128/mybatis-plus-codegen-plugin</url>
@@ -145,7 +145,6 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
-                    <executable>${JAVA_HOME}/bin/javac</executable>
                 </configuration>
             </plugin>
             <plugin>
