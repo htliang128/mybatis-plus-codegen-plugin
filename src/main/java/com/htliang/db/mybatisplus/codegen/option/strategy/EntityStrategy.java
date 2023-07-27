@@ -31,6 +31,8 @@ public class EntityStrategy {
 
     private boolean disableSerialVersionUID = false;
 
+    private boolean enableColumnConstant = false;
+
     private boolean enableChainModel = false;
 
     private boolean enableLombok = false;

@@ -21,7 +21,7 @@
     <groupId>com.htliang</groupId>
     <artifactId>mybatis-plus-codegen-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>1.0.4</version>
+    <version>1.0.4.DEV</version>
 
     <name>Mybatis plus codegen plugin</name>
     <url>https://github.com/htliang128/mybatis-plus-codegen-plugin</url>
@@ -91,12 +91,19 @@
         <dependency>
             <groupId>org.freemarker</groupId>
             <artifactId>freemarker</artifactId>
-            <version>2.3.28</version>
+            <version>2.3.31</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>31.1-jre</version>
+        </dependency>
+
+        <!--Jackson-->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>2.14.2</version>
         </dependency>
 
         <!--db relative-->

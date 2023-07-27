@@ -24,12 +24,14 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.create.table.Index;
 import org.springframework.core.io.Resource;
+import org.springframework.util.CollectionUtils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SqlProcessing {
@@ -91,6 +93,10 @@ public class SqlProcessing {
 
     private static void removeUnionKey(CreateTable createTable) {
         List<Index> indices = createTable.getIndexes();
+        if (CollectionUtils.isEmpty(indices)) {
+            return;
+        }
+
         int primaryKeyIndexOfIndices = getPrimaryKeyIndexOfIndices(indices);
         if (primaryKeyIndexOfIndices < 0) {
             return;

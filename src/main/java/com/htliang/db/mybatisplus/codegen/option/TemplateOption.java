@@ -36,6 +36,8 @@ public class TemplateOption {
 
     private boolean disableController = false;
 
+    private boolean enableCustomTemplate = false;
+
     private String entity;
 
     private String entityKt;

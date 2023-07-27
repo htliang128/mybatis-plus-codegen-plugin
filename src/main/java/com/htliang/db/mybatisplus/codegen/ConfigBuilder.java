@@ -16,34 +16,43 @@
 
 package com.htliang.db.mybatisplus.codegen;
 
-import com.baomidou.mybatisplus.core.enums.SqlLike;
 import com.baomidou.mybatisplus.generator.config.GlobalConfig;
+import com.baomidou.mybatisplus.generator.config.InjectionConfig;
 import com.baomidou.mybatisplus.generator.config.OutputFile;
 import com.baomidou.mybatisplus.generator.config.PackageConfig;
 import com.baomidou.mybatisplus.generator.config.StrategyConfig;
 import com.baomidou.mybatisplus.generator.config.TemplateConfig;
 import com.baomidou.mybatisplus.generator.config.TemplateType;
-import com.baomidou.mybatisplus.generator.config.builder.Controller;
-import com.baomidou.mybatisplus.generator.config.builder.Entity;
-import com.baomidou.mybatisplus.generator.config.builder.Mapper;
-import com.baomidou.mybatisplus.generator.config.builder.Service;
-import com.baomidou.mybatisplus.generator.config.po.LikeTable;
+import com.baomidou.mybatisplus.generator.engine.AbstractTemplateEngine;
+import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
 import com.google.common.base.Strings;
-import com.htliang.db.mybatisplus.codegen.option.strategy.BaseStrategy;
-import com.htliang.db.mybatisplus.codegen.option.TemplateOption;
-import com.htliang.db.mybatisplus.codegen.option.strategy.ControllerStrategy;
-import com.htliang.db.mybatisplus.codegen.option.strategy.EntityStrategy;
+import com.htliang.db.mybatisplus.codegen.dto.CustomClass;
+import com.htliang.db.mybatisplus.codegen.dto.Supplement;
 import com.htliang.db.mybatisplus.codegen.option.GlobalOption;
-import com.htliang.db.mybatisplus.codegen.option.strategy.MapperStrategy;
 import com.htliang.db.mybatisplus.codegen.option.PackageOption;
-import com.htliang.db.mybatisplus.codegen.option.strategy.ServiceStrategy;
 import com.htliang.db.mybatisplus.codegen.option.StrategyOption;
+import com.htliang.db.mybatisplus.codegen.option.TemplateOption;
+import com.htliang.db.mybatisplus.codegen.option.engine.CustomFreemarkerEngine;
+import com.htliang.db.mybatisplus.codegen.option.strategy.BaseStrategyBuilder;
+import com.htliang.db.mybatisplus.codegen.option.strategy.ControllerStrategyBuilder;
+import com.htliang.db.mybatisplus.codegen.option.strategy.EntityStrategyBuilder;
+import com.htliang.db.mybatisplus.codegen.option.strategy.InjectionOption;
+import com.htliang.db.mybatisplus.codegen.option.strategy.MapperStrategyBuilder;
+import com.htliang.db.mybatisplus.codegen.option.strategy.ServiceStrategyBuilder;
+import com.htliang.db.mybatisplus.codegen.utils.BaseUtil;
+import com.htliang.db.mybatisplus.codegen.utils.JacksonUtil;
+import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class ConfigBuilder {
     @NotNull
@@ -86,11 +95,88 @@ public class ConfigBuilder {
     }
 
     @NotNull
+    static Consumer<InjectionConfig.Builder> buildInjectionConfig(InjectionOption injectionOption) {
+        return builder -> builder.customMap(getObjectMap(injectionOption));
+    }
+
+    @NotNull
+    static Consumer<StrategyConfig.Builder> buildStrategyConfig(StrategyOption strategyOption) {
+        return builder -> {
+            BaseStrategyBuilder.build(builder, strategyOption.getBaseStrategy());
+            ControllerStrategyBuilder.build(builder, strategyOption.getControllerStrategy());
+            EntityStrategyBuilder.build(builder, strategyOption.getEntityStrategy());
+            ServiceStrategyBuilder.build(builder, strategyOption.getServiceStrategy());
+            MapperStrategyBuilder.build(builder, strategyOption.getMapperStrategy());
+        };
+    }
+
+    @NotNull
     static Consumer<TemplateConfig.Builder> buildTemplateConfig(TemplateOption templateOption) {
         return builder -> {
             disableTemplates(templateOption, builder);
             setCustomTemplate(templateOption, builder);
         };
+    }
+
+    @NotNull
+    static AbstractTemplateEngine selectTemplateEngine(TemplateOption templateOption) {
+        if (templateOption.isEnableCustomTemplate()) {
+            return new CustomFreemarkerEngine(ConfigBuilder.getResourcesPath());
+        }
+        return new FreemarkerTemplateEngine();
+    }
+
+    @NotNull
+    private static Map<OutputFile, String> getPathInfo(PackageOption packageOption) {
+        if (Objects.nonNull(packageOption.getPathInfo())) {
+            return packageOption.getPathInfo();
+        }
+
+        String baseDir = getBaseDir(packageOption);
+        String xmlDir = getXmlPath();
+
+        Map<OutputFile, String> pathInfo = new HashMap<>();
+        pathInfo.put(OutputFile.xml, xmlDir);
+        pathInfo.put(OutputFile.controller, baseDir + convertPackageNameToDir(packageOption.getController()));
+        pathInfo.put(OutputFile.entity, baseDir + convertPackageNameToDir(packageOption.getEntity()));
+        pathInfo.put(OutputFile.mapper, baseDir + convertPackageNameToDir(packageOption.getMapper()));
+        pathInfo.put(OutputFile.service, baseDir + convertPackageNameToDir(packageOption.getService()));
+        pathInfo.put(OutputFile.serviceImpl, baseDir + convertPackageNameToDir(packageOption.getServiceImpl()));
+        return pathInfo;
+    }
+
+    private static String convertPackageNameToDir(String packageName) {
+        return packageName.replaceAll("\\.", "/");
+    }
+
+    private static String getXmlPath() {
+        return getResourcesPath() + "db/mapper/";
+    }
+
+    private static String getResourcesPath() {
+        return getUserDir() + "/src/main/resources/";
+    }
+
+    @NotNull
+    public static String getBaseDir(PackageOption packageOption) {
+        return getUserDir() + "/src/main/java/" + String.join("/", packageOption
+            .getParent()
+            .split("\\.", -1)) + "/" + packageOption.getModuleName() + "/";
+    }
+
+    @NotNull
+    static String getFlywayConfigPath(String flywayPackageName) {
+        return getUserDir() + "/src/main/java/" + String.join("/", flywayPackageName.split("\\.", -1));
+    }
+
+    private static String getUserDir() {
+        return System.getProperty("user.dir");
+    }
+
+    static String getCustomClassSavePath(CustomClass customClass) {
+        return getUserDir() + "/src/main/java/" + String.join("/", customClass
+            .getPkg()
+            .split("\\.", -1));
     }
 
     private static void disableTemplates(TemplateOption templateOption, TemplateConfig.Builder builder) {
@@ -124,6 +210,10 @@ public class ConfigBuilder {
     }
 
     private static void setCustomTemplate(TemplateOption templateOption, TemplateConfig.Builder builder) {
+        if (checkIfCustomTemplateEngineEnabled(templateOption)) {
+            return;
+        }
+
         if (!Strings.isNullOrEmpty(templateOption.getEntity())) {
             builder.entity(templateOption.getEntity());
         }
@@ -153,225 +243,29 @@ public class ConfigBuilder {
         }
     }
 
-    @NotNull
-    static Consumer<StrategyConfig.Builder> buildStrategyConfig(StrategyOption strategyOption) {
-        return builder -> {
-            buildBaseStrategy(builder, strategyOption.getBaseStrategy());
-            buildControllerStrategy(builder, strategyOption.getControllerStrategy());
-            buildEntityStrategy(builder, strategyOption.getEntityStrategy());
-            buildServiceStrategy(builder, strategyOption.getServiceStrategy());
-            buildMapperStrategy(builder, strategyOption.getMapperStrategy());
-        };
+    private static boolean checkIfCustomTemplateEngineEnabled(TemplateOption templateOption) {
+        return !templateOption.isEnableCustomTemplate();
     }
 
-    static void buildBaseStrategy(StrategyConfig.Builder builder, BaseStrategy baseStrategy) {
-        if (baseStrategy.isEnableCapitalMode()) {
-            builder.enableCapitalMode();
+    @SneakyThrows
+    private static Map<String, Object> getObjectMap(InjectionOption injectionOption) {
+        Map<String, Object> cfg = new HashMap<>();
+        if (Strings.isNullOrEmpty(injectionOption.getSupplementFileName())) {
+            cfg.put("cfg", new HashMap<>());
+            return cfg;
         }
 
-        if (baseStrategy.isEnableSkipView()) {
-            builder.enableSkipView();
+        Resource resource = new FileSystemResource(Strings.isNullOrEmpty(injectionOption.getInjectionBaseDir()) ?
+            "" :
+            injectionOption.getInjectionBaseDir() + injectionOption.getSupplementFileName());
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+            String yamlStr = bufferedReader
+                .lines()
+                .collect(Collectors.joining("\n"));
+            Supplement supplement = JacksonUtil.yaml2Pojo(yamlStr, Supplement.class);
+            cfg.put("cfg", supplement);
+
+            return cfg;
         }
-
-        if (baseStrategy.isDisableSqlFilter()) {
-            builder.disableSqlFilter();
-        }
-
-        if (baseStrategy.isEnableSchema()) {
-            builder.enableSchema();
-        }
-
-        setLikeOrNotLikeTable(builder, baseStrategy);
-        addIncludeOrExcludeColumns(builder, baseStrategy);
-        addPrefixesOrSuffixes(builder, baseStrategy);
-    }
-
-    private static void setLikeOrNotLikeTable(StrategyConfig.Builder builder, BaseStrategy baseStrategy) {
-        if (!Strings.isNullOrEmpty(baseStrategy.getLikeTableValue())) {
-            builder.likeTable(new LikeTable(baseStrategy.getLikeTableValue(), Objects.isNull(baseStrategy.getLikeTableSqlLike()) ?
-                SqlLike.DEFAULT :
-                baseStrategy.getLikeTableSqlLike()));
-        }
-
-        if (!Strings.isNullOrEmpty(baseStrategy.getNotLikeTableValue())) {
-            builder.notLikeTable(new LikeTable(baseStrategy.getNotLikeTableValue(), Objects.isNull(baseStrategy.getNotLikeTableSqlLike()) ?
-                SqlLike.DEFAULT :
-                baseStrategy.getNotLikeTableSqlLike()));
-        }
-    }
-
-    private static void addIncludeOrExcludeColumns(StrategyConfig.Builder builder, BaseStrategy baseStrategy) {
-        if (Objects.nonNull(baseStrategy.getIncludeColumns())) {
-            builder.addInclude(baseStrategy.getIncludeColumns());
-        }
-
-        if (Objects.nonNull(baseStrategy.getExcludeColumns())) {
-            builder.addExclude(baseStrategy.getExcludeColumns());
-        }
-    }
-
-    private static void addPrefixesOrSuffixes(StrategyConfig.Builder builder, BaseStrategy baseStrategy) {
-        if (Objects.nonNull(baseStrategy.getTablePrefixes())) {
-            builder.addTablePrefix(baseStrategy.getTablePrefixes());
-        }
-
-        if (Objects.nonNull(baseStrategy.getTableSuffixes())) {
-            builder.addTableSuffix(baseStrategy.getTableSuffixes());
-        }
-
-        if (Objects.nonNull(baseStrategy.getFieldPrefixes())) {
-            builder.addFieldPrefix(baseStrategy.getFieldPrefixes());
-        }
-
-        if (Objects.nonNull(baseStrategy.getFieldSuffixes())) {
-            builder.addFieldSuffix(baseStrategy.getFieldSuffixes());
-        }
-    }
-
-    static void buildControllerStrategy(StrategyConfig.Builder builder, ControllerStrategy controllerStrategy) {
-        Controller.Builder controllerBuilder = builder.controllerBuilder();
-
-        if (controllerStrategy.isEnableFileOverride()) {
-            controllerBuilder.enableFileOverride();
-        }
-
-        if (controllerStrategy.isEnableHyphenStyle()) {
-            controllerBuilder.enableHyphenStyle();
-        }
-
-        if (controllerStrategy.isEnableRestStyle()) {
-            controllerBuilder.enableRestStyle();
-        }
-
-        controllerBuilder
-            .superClass(controllerStrategy.getSuperClass())
-            .formatFileName(controllerStrategy.getFileNameFormat());
-    }
-
-    static void buildEntityStrategy(StrategyConfig.Builder builder, EntityStrategy entityStrategy) {
-        Entity.Builder entityBuilder = builder.entityBuilder();
-
-        if (entityStrategy.isEnableFileOverride()) {
-            entityBuilder.enableFileOverride();
-        }
-
-        if (entityStrategy.isDisableSerialVersionUID()) {
-            entityBuilder.disableSerialVersionUID();
-        }
-
-        if (entityStrategy.isEnableChainModel()) {
-            entityBuilder.enableLombok();
-            entityBuilder.enableChainModel();
-        }
-
-        if (entityStrategy.isEnableLombok()) {
-            entityBuilder.enableLombok();
-        }
-
-        if (entityStrategy.isEnableRemoveIsPrefix()) {
-            entityBuilder.enableRemoveIsPrefix();
-        }
-
-        if (entityStrategy.isEnableTableFieldAnnotation()) {
-            entityBuilder.enableTableFieldAnnotation();
-        }
-
-        if (entityStrategy.isEnableActiveRecord()) {
-            entityBuilder.enableActiveRecord();
-        }
-
-        if (Objects.nonNull(entityStrategy.getSuperEntityColumns())) {
-            entityBuilder.addSuperEntityColumns(entityStrategy.getSuperEntityColumns());
-        }
-
-        if (Objects.nonNull(entityStrategy.getIgnoreColumns())) {
-            entityBuilder.addIgnoreColumns(entityStrategy.getIgnoreColumns());
-        }
-
-        if (Objects.nonNull(entityStrategy.getTableFills())) {
-            entityBuilder.addTableFills(entityStrategy.getTableFills());
-        }
-
-        entityBuilder
-            .superClass(entityStrategy.getSuperClass())
-            .versionColumnName(entityStrategy.getVersionColumnName())
-            .versionPropertyName(entityStrategy.getVersionPropertyName())
-            .logicDeleteColumnName(entityStrategy.getLogicDeleteColumnName())
-            .logicDeletePropertyName(entityStrategy.getLogicDeletePropertyName())
-            .naming(entityStrategy.getNaming())
-            .naming(entityStrategy.getColumnNaming())
-            .idType(entityStrategy.getIdType())
-            .formatFileName(entityStrategy.getFileNameFormat());
-    }
-
-    static void buildServiceStrategy(StrategyConfig.Builder builder, ServiceStrategy serviceStrategy) {
-        Service.Builder serviceBuilder = builder.serviceBuilder();
-
-        if (serviceStrategy.isEnableFileOverride()) {
-            serviceBuilder.enableFileOverride();
-        }
-
-        serviceBuilder
-            .superServiceClass(serviceStrategy.getSuperClass())
-            .superServiceImplClass(serviceStrategy.getSuperImplClass())
-            .formatServiceFileName(serviceStrategy.getServiceFileNameFormat())
-            .formatServiceImplFileName(serviceStrategy.getServiceImplFileNameFormat());
-    }
-
-    static void buildMapperStrategy(StrategyConfig.Builder builder, MapperStrategy mapperStrategy) {
-
-        Mapper.Builder mapperBuilder = builder.mapperBuilder();
-
-        if (mapperStrategy.isEnableFileOverride()) {
-            mapperBuilder.enableFileOverride();
-        }
-
-        if (mapperStrategy.isEnableBaseResultMap()) {
-            mapperBuilder.enableBaseResultMap();
-        }
-
-        if (mapperStrategy.isEnableBaseColumnList()) {
-            mapperBuilder.enableBaseColumnList();
-        }
-
-        mapperBuilder
-            .superClass(mapperStrategy.getSuperClass())
-            .formatMapperFileName(mapperStrategy.getMapperFileNameFormat())
-            .formatXmlFileName(mapperStrategy.getXmlFileNameFormat());
-    }
-
-    @NotNull
-    private static Map<OutputFile, String> getPathInfo(PackageOption packageOption) {
-        if (Objects.nonNull(packageOption.getPathInfo())) {
-            return packageOption.getPathInfo();
-        }
-
-        String baseDir = getBaseDir(packageOption);
-        String xmlDir = getResourcePath();
-
-        Map<OutputFile, String> pathInfo = new HashMap<>();
-        pathInfo.put(OutputFile.xml, xmlDir);
-        pathInfo.put(OutputFile.controller, baseDir + convertPackageNameToDir(packageOption.getController()));
-        pathInfo.put(OutputFile.entity, baseDir + convertPackageNameToDir(packageOption.getEntity()));
-        pathInfo.put(OutputFile.mapper, baseDir + convertPackageNameToDir(packageOption.getMapper()));
-        pathInfo.put(OutputFile.service, baseDir + convertPackageNameToDir(packageOption.getService()));
-        pathInfo.put(OutputFile.serviceImpl, baseDir + convertPackageNameToDir(packageOption.getServiceImpl()));
-        return pathInfo;
-    }
-
-    private static String convertPackageNameToDir(String packageName) {
-        return packageName.replaceAll("\\.", "/");
-    }
-
-    @NotNull
-    private static String getResourcePath() {
-        return System.getProperty("user.dir") + "/src/main/resources/db/mapper/";
-    }
-
-    @NotNull
-    public static String getBaseDir(PackageOption packageOption) {
-        return System.getProperty("user.dir") + "/src/main/java/" + String.join("/", packageOption
-            .getParent()
-            .split("\\.", -1)) + "/" + packageOption.getModuleName() + "/";
     }
 }
