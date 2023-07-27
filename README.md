@@ -72,7 +72,7 @@ Mybatis plus codegen plugin will help you generate your code at every moment wit
             <plugin>
                 <groupId>com.htliang</groupId>
                 <artifactId>mybatis-plus-codegen-plugin</artifactId>
-                <version>1.0.5.DEV</version>
+                <version>1.0.7.DEV</version>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
