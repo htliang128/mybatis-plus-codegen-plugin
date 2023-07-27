@@ -11,7 +11,7 @@ public class CustomTable {
     private String name;
 
     @JsonProperty("imports")
-    private String imports;
+    private String[] imports;
 
     @JsonProperty("super_class")
     private String superClass;
