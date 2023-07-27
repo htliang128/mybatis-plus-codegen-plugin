@@ -68,7 +68,7 @@ Mybatis plus codegen plugin will help you generate your code at every moment wit
             </plugin>
 ```
 ### 进阶使用
-```
+``` xml
             <plugin>
                 <groupId>com.htliang</groupId>
                 <artifactId>mybatis-plus-codegen-plugin</artifactId>
@@ -136,7 +136,7 @@ Mybatis plus codegen plugin will help you generate your code at every moment wit
 ```
 
 此处附上所需的模板文件
-```
+``` ftl
 // customClass.ftl
 package ${package};
 
@@ -161,7 +161,7 @@ ${member}
 }
 ```
 
-```
+``` ftl
 // entity.ftl
 package ${package.Entity};
 
@@ -444,7 +444,7 @@ public class ${entity} {
 }
 ```
 
-```
+``` yaml
 // supplement.yaml
 tables:
   - name: t_table
@@ -476,7 +476,7 @@ supers:
       - update_at
 ```
 
-```
+``` json
 // customClasses.json
 [
   {
