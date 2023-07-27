@@ -477,7 +477,7 @@ supers:
 ```
 
 ``` json
-// customClasses.json
+# customClasses.json
 [
   {
     "package": "com.htliang.xxx.entity",
