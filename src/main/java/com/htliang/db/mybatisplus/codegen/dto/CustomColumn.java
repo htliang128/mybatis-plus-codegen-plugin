@@ -16,6 +16,6 @@ public class CustomColumn {
     @JsonProperty("custom_type")
     private String customType;
 
-    @JsonProperty("custom_annotation")
-    private String customAnnotation;
+    @JsonProperty("custom_annotations")
+    private String[] customAnnotations;
 }
